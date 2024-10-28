@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+        }
+        .on {
+            text-align: center;
+        }
+        .on1 {
+            display: block;
+        }
+        .box {
+            display: flex;
+            justify-content: center;
+            gap: 120px;
+        }
+        .box-1 {
+            display: flex;
+            justify-content: center;
+            position: relative;
+        }
+        .box1, .box2 {
+            height: 12px;
+            position: relative;
+        }
+        .box1 {
+            border: 1px solid red;
+            width: 50px;
+            background-color: red;
+        }
+        .box2 {
+            border: 1px solid black;
+            width: 220px;
+            margin-left: 5px;
+            position: relative;
+        }
+        .needle {
+            width: 2px;
+            height: 50px;
+            background-color: orange;
+            position: absolute;
+            margin-left: 500px;
+            margin-top: -50px;
+            transition: left 0.1s ease; /* Adjusted for a smoother transition */
+        }
+        .input-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        input {
+            padding: 10px;
+            width: 200px;
+            font-size: 16px;
+        }
+        .cumulative-fuel {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 18px;
+        }
+        .new, .reset {
+            padding: 7px;
+            width: 150px;
+            font-size: 16px;
+            background-color: blue;
+            border: 1px solid blue;
+            color: white;
+            box-shadow: 1px 1px 3px 5px blue;
+            cursor: pointer; /* Added cursor pointer for better UX */
+        }
+        .reset {
+            background-color: red; /* Different color for reset button */
+        }
+    </style>
+    <title>Fuel Meter</title>
+</head>
+<body>
+    <h1 class="on">Fuel Meter</h1>  
+    <div class="box">
+        <p>E</p>
+        <i class="bx bxs-gas-pump on1"></i>
+        <p>F</p>
+    </div>
+    <div class="box-1">
+        <p class="box1"></p>
+        <p class="box2"></p>
+    </div>
+    <div class="needle" id="needle"></div>
+
+    <div class="input-container">
+        <input type="number" id="fuelInput" placeholder="Enter fuel in liters" min="0" max="9.8" step="0.1">
+        <button class="new" onclick="updateNeedle()">Update Needle</button>
+        <button class="reset" onclick="resetFuel()">Reset</button> <!-- Added Reset Button -->
+        <br>
+        <br>
+        <p class="cumulative-fuel" id="cumulativeFuelDisplay">Cumulative Fuel: 0.0 liters</p>
+    </div>
+
+    <script>
+        let cumulativeFuel = 0; // Track total fuel value
+        const needle = document.getElementById("needle");
+        const maxWidth = 227; // Width of the box2
+        const initialPosition = 50; // Position of "E"
+        const cumulativeFuelDisplay = document.getElementById("cumulativeFuelDisplay");
+    
+        function smoothMoveNeedle(targetPosition) {
+            const currentLeft = parseFloat(needle.style.left) || initialPosition;
+    
+            // Incremental update to create the smooth animation
+            const step = (targetPosition - currentLeft) / 20; // Change 20 for speed of the animation
+    
+            function move() {
+                const newLeft = parseFloat(needle.style.left) || initialPosition;
+                needle.style.left = `${newLeft + step}px`;
+    
+                // Continue moving until we reach the target position
+                if ((step > 0 && newLeft < targetPosition) || (step < 0 && newLeft > targetPosition)) {
+                    requestAnimationFrame(move);
+                } else {
+                    needle.style.left = `${targetPosition}px`; // Ensure it ends exactly at target
+                }
+            }
+    
+            move();
+        }
+    
+        function updateNeedle() {
+            const fuelInput = parseFloat(document.getElementById("fuelInput").value);
+    
+            // If the input is empty or invalid, do nothing
+            if (isNaN(fuelInput) || fuelInput < 0) {
+                return;
+            }
+    
+            // Add the input value to the cumulative fuel
+            cumulativeFuel += fuelInput;
+    
+            // Limit the cumulative value to 9.8 liters (full tank)
+            cumulativeFuel = Math.min(cumulativeFuel, 9.8);
+    
+            // Update the cumulative fuel display
+            cumulativeFuelDisplay.textContent = `Cumulative Fuel: ${cumulativeFuel.toFixed(1)} liters`;
+    
+            // Calculate the new needle position based on the cumulative fuel
+            const targetPosition = initialPosition + (cumulativeFuel / 9.8) * maxWidth;
+    
+            // Smoothly move the needle to the new position
+            smoothMoveNeedle(targetPosition);
+    
+            // Clear the input field after each update
+            document.getElementById("fuelInput").value = "";
+        }
+    
+        // Reset function to set fuel back to one liter
+        function resetFuel() {
+            cumulativeFuel = 1; // Set cumulative fuel to 1
+            cumulativeFuelDisplay.textContent = "Cumulative Fuel: 1.0 liters"; // Update display
+            const targetPosition = initialPosition + (cumulativeFuel / 9.8) * maxWidth; // Calculate new position for the needle
+            smoothMoveNeedle(targetPosition); // Smoothly move needle to new position
+            document.getElementById("fuelInput").value = ""; // Clear input field
+        }
+    
+        // Trigger updateNeedle function when "Enter" key is pressed
+        document.getElementById("fuelInput").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                updateNeedle();
+            }
+        });
+    </script>
+    
+</body>
+</html>
